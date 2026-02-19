@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StudyTales">
+<meta name="theme-color" content="#2D2A55">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>StudyTales ✨</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root {
+  --sky: #6EC6F5;
+  --sun: #FFD95A;
+  --grass: #5DD98A;
+  --coral: #FF7F72;
+  --purple: #B57BF7;
+  --cream: #FFF8ED;
+  --dark: #2D2A55;
+  --card-bg: rgba(255,255,255,0.88);
+  --shadow: 0 8px 32px rgba(45,42,85,0.13);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: linear-gradient(160deg, #a8edea 0%, #fed6e3 50%, #d4f1c0 100%);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── Clouds (subtle, mobile-light) ── */
+.cloud { position: fixed; border-radius: 50px; background: rgba(255,255,255,0.55); animation: drift linear infinite; pointer-events: none; z-index: 0; }
+.cloud::before,.cloud::after { content:''; position:absolute; background:inherit; border-radius:50%; }
+.c1 { width:90px;height:30px;top:6%;left:-100px;animation-duration:26s; }
+.c1::before { width:44px;height:44px;top:-18px;left:12px; }
+.c1::after  { width:34px;height:34px;top:-13px;left:42px; }
+.c2 { width:70px;height:24px;top:30%;left:-90px;animation-duration:38s;animation-delay:-14s; }
+.c2::before { width:35px;height:35px;top:-15px;left:8px; }
+.c2::after  { width:28px;height:28px;top:-11px;left:32px; }
+@keyframes drift { to { left: 110vw; } }
+
+/* ── App shell ── */
+.app-shell {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100%;
+  padding-top: var(--safe-top);
+}
+
+/* ── Header ── */
+.app-header {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 14px 16px 10px;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+}
+.header-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.buddy { font-size: 2rem; display: inline-block; animation: bounce 2.4s ease-in-out infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.logo { font-family:'Fredoka One',cursive; font-size:1.9rem; color:var(--dark); text-shadow:2px 2px 0 var(--sun); }
+.logo span { color:var(--coral); }
+.tagline { font-size:0.75rem; font-weight:700; color:var(--dark); opacity:0.6; margin-top:2px; letter-spacing:.5px; }
+
+/* ── Scrollable content ── */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 14px 8px;
+}
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.6);
+  padding-bottom: calc(var(--safe-bot) + 4px);
+  box-shadow: 0 -4px 20px rgba(45,42,85,0.08);
+}
+.nav-item {
+  flex: 1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 8px 4px; border:none; background:transparent; cursor:pointer;
+  transition: transform 0.18s; gap: 3px;
+}
+.nav-item:active { transform: scale(0.88); }
+.nav-item .nav-icon { font-size: 1.5rem; line-height:1; }
+.nav-item .nav-label { font-family:'Fredoka One',cursive; font-size:0.62rem; color:#aaa; letter-spacing:.3px; }
+.nav-item.active .nav-label { color:var(--dark); }
+.nav-item.active .nav-pill {
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  width:30px; height:3px; border-radius:2px; background:var(--purple);
+}
+.nav-item { position:relative; }
+
+/* ── Panels ── */
+.panel { display:none; animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.panel.active { display:block; }
+@keyframes popIn { from{opacity:0;transform:translateY(14px)scale(0.97)} to{opacity:1;transform:none} }
+
+/* ── Card ── */
+.card {
+  background:var(--card-bg); border-radius:22px; padding:18px 16px;
+  box-shadow:var(--shadow); backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,0.7); margin-bottom:14px;
+}
+h2 { font-family:'Fredoka One',cursive; font-size:1.5rem; color:var(--dark); margin-bottom:6px; }
+p.sub { color:#666; font-size:0.88rem; margin-bottom:14px; line-height:1.5; }
+
+/* ── Upload ── */
+.upload-zone {
+  border:3px dashed var(--purple); border-radius:18px; padding:32px 16px;
+  text-align:center; cursor:pointer; background:rgba(181,123,247,0.06);
+  transition:all 0.2s; position:relative;
+}
+.upload-zone.drag-over { background:rgba(181,123,247,0.15); border-color:var(--coral); }
+.upload-zone input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.upload-icon { font-size:2.8rem; display:block; margin-bottom:8px; }
+.upload-zone p { font-weight:700; color:var(--dark); font-size:0.97rem; }
+.upload-zone small { color:#999; font-size:0.82rem; }
+
+.file-list { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.file-item {
+  display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.85);
+  border-radius:12px; padding:10px 12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+.file-item .file-icon { font-size:1.3rem; }
+.file-item .file-name { flex:1; font-weight:700; color:var(--dark); font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-item .remove-btn { background:none; border:none; font-size:1.1rem; cursor:pointer; color:#bbb; padding:4px; }
+
+.big-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:'Fredoka One',cursive; font-size:1.05rem; padding:13px 24px;
+  border:none; border-radius:50px; cursor:pointer; transition:all 0.18s;
+  box-shadow:0 4px 16px rgba(0,0,0,0.12); color:#fff; width:100%; margin-top:10px;
+}
+.big-btn:active { transform:scale(0.96); }
+.btn-purple { background:linear-gradient(135deg,var(--purple),#8e4cf0); }
+.btn-coral  { background:linear-gradient(135deg,var(--coral),#e85d50); }
+.btn-green  { background:linear-gradient(135deg,var(--grass),#3dba6e); }
+.btn-sky    { background:linear-gradient(135deg,var(--sky),#3da8e8); }
+.btn-sun    { background:linear-gradient(135deg,var(--sun),#f0b400); color:var(--dark); }
+.btn-row    { display:flex; gap:10px; }
+.btn-row .big-btn { flex:1; }
+
+/* ── Story ── */
+.style-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.style-chip {
+  padding:7px 14px; border-radius:50px; border:2px solid; font-weight:700;
+  cursor:pointer; transition:all 0.18s; font-family:'Nunito',sans-serif;
+  font-size:0.85rem; background:transparent;
+}
+.style-chip.sel { color:#fff !important; }
+.chip-adventure{border-color:var(--coral);color:var(--coral);}
+.chip-adventure.sel{background:var(--coral);}
+.chip-magic{border-color:var(--purple);color:var(--purple);}
+.chip-magic.sel{background:var(--purple);}
+.chip-space{border-color:#3da8e8;color:#3da8e8;}
+.chip-space.sel{background:#3da8e8;}
+.chip-ocean{border-color:#2dd4bf;color:#2dd4bf;}
+.chip-ocean.sel{background:#2dd4bf;}
+
+.story-box {
+  background:linear-gradient(135deg,#fff9f0,#f0f4ff); border-radius:18px;
+  padding:20px 16px; min-height:160px; font-size:0.98rem; line-height:1.85;
+  color:var(--dark); border:2px solid rgba(181,123,247,0.18);
+  max-height:52vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.story-box .thinking { color:#aaa; font-style:italic; text-align:center; padding:32px 0; }
+.story-text { white-space:pre-wrap; }
+
+/* ── Quiz ── */
+.score-bar { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.score-badge { font-family:'Fredoka One',cursive; font-size:1.25rem; background:var(--sun); padding:7px 16px; border-radius:50px; color:var(--dark); white-space:nowrap; }
+.progress-bar-wrap { flex:1; height:11px; background:rgba(0,0,0,0.08); border-radius:50px; overflow:hidden; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--grass),var(--sky)); border-radius:50px; transition:width 0.5s; }
+
+.quiz-topic { display:flex; gap:8px; margin-bottom:14px; }
+.quiz-topic input {
+  flex:1; padding:11px 16px; border-radius:50px; border:2px solid rgba(181,123,247,0.3);
+  font-family:'Nunito',sans-serif; font-size:0.95rem; font-weight:600; outline:none;
+  background:rgba(255,255,255,0.85);
+}
+.quiz-topic input:focus { border-color:var(--purple); }
+.quiz-topic .big-btn { width:auto; margin-top:0; padding:11px 18px; flex-shrink:0; }
+
+.quiz-card {
+  background:linear-gradient(135deg,#f0f4ff,#fff0f9); border-radius:18px;
+  padding:20px 16px; border:2px solid rgba(181,123,247,0.12);
+}
+.question-text { font-size:1.05rem; font-weight:800; color:var(--dark); margin-bottom:14px; line-height:1.5; }
+.answers { display:grid; grid-template-columns:1fr; gap:9px; }
+.ans-btn {
+  padding:12px 14px; border-radius:13px; border:2.5px solid #e0e0f0;
+  background:rgba(255,255,255,0.92); font-family:'Nunito',sans-serif;
+  font-weight:700; font-size:0.93rem; cursor:pointer; transition:all 0.18s;
+  text-align:left; color:var(--dark); -webkit-tap-highlight-color:transparent;
+}
+.ans-btn:active { transform:scale(0.97); }
+.ans-btn.correct { background:#d4f8e0; border-color:var(--grass); color:#1a7a40; }
+.ans-btn.wrong   { background:#fde8e8; border-color:var(--coral); color:#a32020; }
+
+/* ── Flashcards ── */
+.flashcard-wrap { perspective:700px; margin:0 auto 18px; }
+.flashcard {
+  width:100%; aspect-ratio:3/2; position:relative; cursor:pointer;
+  transform-style:preserve-3d; transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.flashcard.flipped { transform:rotateY(180deg); }
+.fc-face {
+  position:absolute; inset:0; border-radius:20px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:20px; backface-visibility:hidden;
+}
+.fc-front { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; box-shadow:0 10px 36px rgba(102,126,234,0.3); }
+.fc-back  { background:linear-gradient(135deg,#f7971e,#ffd200); color:var(--dark); box-shadow:0 10px 36px rgba(247,151,30,0.3); transform:rotateY(180deg); }
+.fc-label { font-size:0.7rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; opacity:0.65; margin-bottom:8px; }
+.fc-word  { font-family:'Fredoka One',cursive; font-size:1.55rem; text-align:center; line-height:1.3; }
+.fc-hint  { font-size:0.8rem; opacity:0.75; margin-top:8px; text-align:center; }
+.tap-hint { font-size:0.72rem; opacity:0.5; margin-top:10px; }
+
+.fc-nav { display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:16px; }
+.fc-nav button {
+  font-size:1.4rem; background:rgba(255,255,255,0.8); border:none; border-radius:50%;
+  width:44px; height:44px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.1);
+  transition:transform 0.15s; display:flex; align-items:center; justify-content:center;
+}
+.fc-nav button:active { transform:scale(0.88); }
+.fc-counter { font-family:'Fredoka One',cursive; font-size:1.15rem; color:var(--dark); }
+
+.fc-gen-area { display:flex; flex-direction:column; gap:8px; }
+.fc-gen-area input {
+  padding:11px 16px; border-radius:50px; border:2px solid rgba(86,166,234,0.3);
+  font-family:'Nunito',sans-serif; font-size:0.95rem; font-weight:600;
+  outline:none; background:rgba(255,255,255,0.85); width:100%;
+}
+
+/* ── Progress ── */
+.progress-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+.prog-stat {
+  background:rgba(255,255,255,0.82); border-radius:16px; padding:16px 10px;
+  text-align:center; box-shadow:0 3px 12px rgba(0,0,0,0.06); border:2px solid rgba(255,255,255,0.7);
+}
+.stat-icon { font-size:2rem; display:block; margin-bottom:6px; }
+.stat-val  { font-family:'Fredoka One',cursive; font-size:1.8rem; color:var(--dark); }
+.stat-label{ font-size:0.75rem; font-weight:700; color:#888; }
+
+.subject-bars { display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
+.subj-header { display:flex; justify-content:space-between; font-weight:800; color:var(--dark); margin-bottom:5px; font-size:0.9rem; }
+.subj-track  { height:12px; background:rgba(0,0,0,0.07); border-radius:50px; overflow:hidden; }
+.subj-fill   { height:100%; border-radius:50px; transition:width 1.1s ease; }
+
+.badge-shelf { display:flex; gap:10px; flex-wrap:wrap; }
+.badge {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:rgba(255,255,255,0.85); border-radius:14px; padding:12px 14px;
+  box-shadow:0 3px 12px rgba(0,0,0,0.07); min-width:70px;
+}
+.badge .b-icon  { font-size:1.8rem; }
+.badge .b-name  { font-size:0.7rem; font-weight:800; color:var(--dark); text-align:center; }
+.badge.locked   { filter:grayscale(1) opacity(0.4); }
+
+/* ── Install Banner ── */
+.install-banner {
+  display:none; align-items:center; gap:10px; background:linear-gradient(135deg,var(--purple),#8e4cf0);
+  color:#fff; padding:12px 16px; border-radius:16px; margin-bottom:12px;
+  box-shadow:0 4px 16px rgba(181,123,247,0.35);
+}
+.install-banner.show { display:flex; }
+.install-banner p { flex:1; font-weight:700; font-size:0.88rem; }
+.install-banner button { background:rgba(255,255,255,0.25); border:none; color:#fff; font-family:'Fredoka One',cursive; padding:8px 14px; border-radius:50px; cursor:pointer; font-size:0.85rem; }
+.install-dismiss { background:none !important; font-size:1.2rem; padding:4px 8px !important; }
+
+/* ── Spinner ── */
+.spinner { display:inline-block; width:22px; height:22px; border:3px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── Toast ── */
+.toast {
+  position:fixed; bottom:calc(var(--safe-bot) + 72px); left:50%;
+  transform:translateX(-50%) translateY(30px); background:var(--dark); color:#fff;
+  padding:10px 22px; border-radius:50px; font-weight:700; font-size:0.9rem;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2); transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:999; white-space:nowrap; opacity:0; pointer-events:none;
+}
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="cloud c1"></div>
+<div class="cloud c2"></div>
+
+<div class="app-shell">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-row">
+      <span class="buddy">🦄</span>
+      <div>
+        <div class="logo">Study<span>Tales</span> ✨</div>
+        <div class="tagline">YOUR MAGICAL LEARNING WORLD</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="content-area" id="contentArea">
+
+    <!-- Install Banner -->
+    <div class="install-banner" id="installBanner">
+      <span style="font-size:1.5rem">📲</span>
+      <p>Add StudyTales to your home screen for the full app experience!</p>
+      <button onclick="doInstall()">Install</button>
+      <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+    </div>
+
+    <!-- ══ UPLOAD ══ -->
+    <div class="panel active" id="panel-upload">
+      <div class="card">
+        <h2>📚 Upload Material</h2>
+        <p class="sub">Drop in worksheets, textbooks, or images and watch them come to life!</p>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.txt" onchange="handleFiles(this.files)">
+          <span class="upload-icon">🌈</span>
+          <p>Tap to browse files</p>
+          <small>PDF, images, or text files</small>
+        </div>
+        <div class="file-list" id="fileList"></div>
+        <div class="btn-row">
+          <button class="big-btn btn-purple" onclick="processFiles()">
+            <span id="processLabel">🪄 Make Magic!</span>
+          </button>
+          <button class="big-btn btn-coral" onclick="demoMode()">🎲 Demo</button>
+        </div>
+      </div>
+
+      <div class="card" style="background:linear-gradient(135deg,#fff9f0,#f0f4ff)">
+        <h2 style="font-size:1.2rem">💡 How it works</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font-size:1.4rem">1️⃣</span>
+            <div><strong style="color:var(--dark)">Upload</strong><br><span style="font-size:0.85rem;color:#666">Add your child's study material</span></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font-size:1.4rem">2️⃣</span>
+            <div><strong style="color:var(--dark)">Explore</strong><br><span style="font-size:0.85rem;color:#666">Read fun stories based on the material</span></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font-size:1.4rem">3️⃣</span>
+            <div><strong style="color:var(--dark)">Play & Learn</strong><br><span style="font-size:0.85rem;color:#666">Quiz yourself & study with flashcards</span></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font-size:1.4rem">4️⃣</span>
+            <div><strong style="color:var(--dark)">Grow</strong><br><span style="font-size:0.85rem;color:#666">Track your progress & earn badges!</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STORY ══ -->
+    <div class="panel" id="panel-story">
+      <div class="card">
+        <h2>📖 Story Time!</h2>
+        <p class="sub">Your study material becomes an amazing adventure!</p>
+        <div class="style-chips">
+          <button class="style-chip chip-adventure sel" onclick="selectStyle(this,'adventure')">🗺️ Adventure</button>
+          <button class="style-chip chip-magic" onclick="selectStyle(this,'magic')">🔮 Magic</button>
+          <button class="style-chip chip-space" onclick="selectStyle(this,'space')">🚀 Space</button>
+          <button class="style-chip chip-ocean" onclick="selectStyle(this,'ocean')">🌊 Ocean</button>
+        </div>
+        <div class="story-box" id="storyBox">
+          <div class="thinking" id="storyThinking">Upload material or try Demo first! 🎉</div>
+          <div class="story-text" id="storyText"></div>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="big-btn btn-coral" onclick="generateStory()">🪄 Generate</button>
+          <button class="big-btn btn-sky" onclick="readAloud()">🔊 Read</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ QUIZ ══ -->
+    <div class="panel" id="panel-quiz">
+      <div class="card">
+        <h2>🎯 Quiz Time!</h2>
+        <div class="score-bar">
+          <div class="score-badge" id="scoreDisplay">⭐ 0 / 0</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="quizProgressFill" style="width:0%"></div></div>
+        </div>
+        <div class="quiz-topic">
+          <input type="text" id="quizTopic" placeholder="Topic (e.g. Animals, Maths…)" />
+          <button class="big-btn btn-green" onclick="generateQuiz()">🎲 Go!</button>
+        </div>
+        <div id="quizContainer">
+          <div style="text-align:center;padding:36px;color:#aaa;font-style:italic;font-size:0.9rem">Generate a quiz or upload material first! 🦄</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FLASHCARDS ══ -->
+    <div class="panel" id="panel-flash">
+      <div class="card">
+        <h2>🃏 Flashcards</h2>
+        <p class="sub">Tap a card to flip it and see the answer!</p>
+        <div class="flashcard-wrap">
+          <div class="flashcard" id="flashcard" onclick="flipCard()">
+            <div class="fc-face fc-front">
+              <span class="fc-label">Question</span>
+              <span class="fc-word" id="fcFront">What is the largest planet in our solar system?</span>
+              <span class="tap-hint">👆 Tap to reveal!</span>
+            </div>
+            <div class="fc-face fc-back">
+              <span class="fc-label">Answer ✓</span>
+              <span class="fc-word" id="fcBack">Jupiter 🪐</span>
+              <span class="fc-hint" id="fcHint">All other planets could fit inside it!</span>
+            </div>
+          </div>
+        </div>
+        <div class="fc-nav">
+          <button onclick="prevCard()">⬅️</button>
+          <span class="fc-counter" id="fcCounter">1 / 5</span>
+          <button onclick="nextCard()">➡️</button>
+        </div>
+        <div class="fc-gen-area">
+          <input type="text" id="flashTopic" placeholder="Type a topic to generate new cards…" />
+          <button class="big-btn btn-sky" onclick="generateFlashcards()">✨ Generate Cards</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PROGRESS ══ -->
+    <div class="panel" id="panel-progress">
+      <div class="card">
+        <h2>⭐ Your Progress</h2>
+        <p class="sub">Look how much you've learned, superstar!</p>
+        <div class="progress-grid">
+          <div class="prog-stat"><span class="stat-icon">📖</span><div class="stat-val" id="statStories">3</div><div class="stat-label">Stories</div></div>
+          <div class="prog-stat"><span class="stat-icon">🎯</span><div class="stat-val" id="statQuizzes">12</div><div class="stat-label">Quiz Answers</div></div>
+          <div class="prog-stat"><span class="stat-icon">🃏</span><div class="stat-val" id="statCards">24</div><div class="stat-label">Cards Studied</div></div>
+          <div class="prog-stat"><span class="stat-icon">🔥</span><div class="stat-val" id="statStreak">4</div><div class="stat-label">Day Streak</div></div>
+        </div>
+        <h2 style="font-size:1.3rem;margin-bottom:12px">📊 Subject Mastery</h2>
+        <div class="subject-bars" id="subjectBars"></div>
+        <h2 style="font-size:1.3rem;margin:16px 0 12px">🏅 Badges</h2>
+        <div class="badge-shelf" id="badgeShelf"></div>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-upload" onclick="switchTab('upload')">
+      <span class="nav-icon">📁</span>
+      <span class="nav-label">Upload</span>
+      <div class="nav-pill"></div>
+    </button>
+    <button class="nav-item" id="nav-story" onclick="switchTab('story')">
+      <span class="nav-icon">📖</span>
+      <span class="nav-label">Story</span>
+      <div class="nav-pill"></div>
+    </button>
+    <button class="nav-item" id="nav-quiz" onclick="switchTab('quiz')">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-label">Quiz</span>
+      <div class="nav-pill"></div>
+    </button>
+    <button class="nav-item" id="nav-flash" onclick="switchTab('flash')">
+      <span class="nav-icon">🃏</span>
+      <span class="nav-label">Cards</span>
+      <div class="nav-pill"></div>
+    </button>
+    <button class="nav-item" id="nav-progress" onclick="switchTab('progress')">
+      <span class="nav-icon">⭐</span>
+      <span class="nav-label">Progress</span>
+      <div class="nav-pill"></div>
+    </button>
+  </nav>
+
+</div><!-- /app-shell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PWA Registration ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.log('SW:', e));
+  });
+}
+
+// ── Install prompt ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.remove('show');
+  showToast('🎉 StudyTales installed!');
+});
+function doInstall() {
+  if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); }
+  document.getElementById('installBanner').classList.remove('show');
+}
+function dismissInstall() { document.getElementById('installBanner').classList.remove('show'); }
+
+// ── State ──
+const state = {
+  files: [], uploadedContent: '',
+  quizQuestions: [], currentQ: 0, score: 0,
+  flashcards: [
+    { q:'What is the largest planet in our solar system?', a:'Jupiter 🪐', hint:'All other planets could fit inside it!' },
+    { q:'How many sides does a hexagon have?', a:'6 sides ⬡', hint:'Bees make honeycombs with this shape!' },
+    { q:'What do plants need to make food?', a:'Sunlight, water & CO₂ ☀️', hint:'Called photosynthesis!' },
+    { q:'What is 8 × 7?', a:'56', hint:'8 groups of 7!' },
+    { q:'Which planet is closest to the Sun?', a:'Mercury ☄️', hint:'Almost no atmosphere!' },
+  ],
+  currentCard: 0, storyStyle: 'adventure',
+  storiesRead: 3, quizAnswers: 12, cardsStudied: 24, streak: 4,
+  subjects: [
+    { name:'Science 🔬', pct:72, color:'#5DD98A' },
+    { name:'Maths ➕',   pct:58, color:'#6EC6F5' },
+    { name:'Reading 📚', pct:85, color:'#B57BF7' },
+    { name:'History 🏛️', pct:40, color:'#FFD95A' },
+  ],
+  badges: [
+    { icon:'🌟', name:'Story Star',   locked:false },
+    { icon:'🎯', name:'Quiz Champ',   locked:false },
+    { icon:'🔥', name:'7-Day Streak', locked:true  },
+    { icon:'📚', name:'Bookworm',     locked:false },
+    { icon:'🚀', name:'Speed Reader', locked:true  },
+    { icon:'🏆', name:'Top Scorer',   locked:true  },
+  ]
+};
+
+// Persist stats
+function saveState() {
+  try { localStorage.setItem('st_stats', JSON.stringify({ storiesRead:state.storiesRead, quizAnswers:state.quizAnswers, cardsStudied:state.cardsStudied, streak:state.streak })); } catch(e){}
+}
+function loadState() {
+  try { const s = JSON.parse(localStorage.getItem('st_stats')||'{}'); Object.assign(state, s); } catch(e){}
+}
+loadState();
+
+// ── Tab switching ──
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  document.getElementById('contentArea').scrollTo({ top: 0, behavior: 'smooth' });
+  if (tab === 'progress') renderProgress();
+}
+
+// ── Upload ──
+const dropZone = document.getElementById('uploadZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(files) {
+  [...files].forEach(f => { if (!state.files.find(x => x.name === f.name)) state.files.push(f); });
+  renderFileList();
+}
+function renderFileList() {
+  document.getElementById('fileList').innerHTML = state.files.map((f,i) => `
+    <div class="file-item">
+      <span class="file-icon">${f.type.includes('pdf')?'📄':f.type.includes('image')?'🖼️':'📝'}</span>
+      <span class="file-name">${f.name}</span>
+      <button class="remove-btn" onclick="removeFile(${i})">✕</button>
+    </div>`).join('');
+}
+function removeFile(i) { state.files.splice(i,1); renderFileList(); }
+
+async function processFiles() {
+  if (!state.files.length) { showToast('⚠️ Upload at least one file first!'); return; }
+  const lbl = document.getElementById('processLabel');
+  lbl.innerHTML = '<div class="spinner"></div>';
+  await sleep(1800);
+  state.uploadedContent = `Content from: ${state.files.map(f=>f.name).join(', ')}`;
+  lbl.innerHTML = '✅ Ready!';
+  showToast('🎉 Files ready! Go explore!');
+  await sleep(500);
+  switchTab('story');
+  generateStory();
+}
+function demoMode() {
+  state.uploadedContent = 'Demo: Animals of the Rainforest — Jaguars, Toucans, Tree Frogs, Anacondas. Habitats, diets, and adaptations.';
+  showToast('🎲 Demo mode on!');
+  switchTab('story');
+  generateStory();
+}
+
+// ── Story ──
+let currentStyle = 'adventure';
+function selectStyle(el, style) {
+  document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  currentStyle = style;
+}
+
+const storyTemplates = {
+  adventure: () => `🗺️ The Great Rainforest Expedition
+
+Deep in the Whispering Jungle, young explorer Zara clutched her glowing map. She had studied everything — jaguars with their spotted cloaks, toucans with rainbow beaks, and tiny tree frogs wearing jewel-bright skin.
+
+"The golden jaguar is real," whispered Pip the toucan. "But only those who truly understand the forest can find it."
+
+Zara smiled. She knew jaguars were apex predators — stealthy, powerful, built for dappled shadows. She knew toucans used their bright beaks to reach fruit no other bird could. She knew the tree frog's sticky toes were tiny miracles of engineering.
+
+Armed with knowledge, Zara and Pip journeyed deeper — past rustling canopies, under hanging vines, toward the golden heartbeat of the forest. 🌿✨
+
+What will they discover next? That depends on YOU, young explorer!`,
+
+  magic: () => `🔮 The Enchanted Rainforest Spellbook
+
+In the village of Moonwhisper, every child received a magical animal companion when they turned seven. But brave little Finn received something extraordinary — a living spellbook that held the secrets of the rainforest!
+
+The book glowed: "Jaguar… silent hunter. Toucan… keeper of colours. Tree frog… tiny giant of the canopy…"
+
+Each fact Finn learned became a glittering spell! He could move silently as a jaguar, see colours as brilliantly as a toucan, and leap between branches like a tree frog!
+
+"Knowledge," said the old spell-weaver, "is the most powerful magic of all." 🌟`,
+
+  space: () => `🚀 Space Station Rainforest
+
+Commander Mia pressed her nose against Space Station Rainbow's observation dome, gazing at the green jewel called Earth. Her mission: catalogue every amazing rainforest creature for the Galactic Library.
+
+"Scanning… jaguar detected! Incredible stealth technology," chimed her AI. "Toucan detected — beak functions as a temperature regulator!"
+
+Then something tiny hopped across her scanner — a single tree frog, no bigger than a thumbnail, carrying a symphony of warning colours.
+
+"Amazing," Mia breathed. Even from space, these creatures seemed to glow with importance. 🪐🐸`,
+
+  ocean: () => `🌊 The Deep-Sea Academy
+
+Far below the waves, in a palace of coral and pearl, the Deep-Sea Academy welcomed its newest student: a curious starfish named Leo.
+
+Today's lesson surprised him — it was about the rainforest above! "Every habitat connects," said Professor Whale. "What happens in the jungle touches the sea."
+
+Leo learned that jaguars swim! That toucans scatter seeds that grow into trees that protect rivers. That tree frogs sing in rhythms that echo across continents.
+
+"We are all one world," hummed the ocean. 💙🌿`
+};
+
+let speaking = false;
+async function generateStory() {
+  if (!state.uploadedContent) { showToast('📂 Upload material or try Demo!'); return; }
+  const thinking = document.getElementById('storyThinking');
+  const text = document.getElementById('storyText');
+  thinking.style.display = 'block';
+  thinking.textContent = '✨ Weaving your story…';
+  text.textContent = '';
+  await sleep(1200);
+  const story = storyTemplates[currentStyle]();
+  thinking.style.display = 'none';
+  text.textContent = '';
+  let i = 0;
+  const iv = setInterval(() => {
+    text.textContent = story.slice(0, i);
+    i += 4;
+    if (i > story.length) { clearInterval(iv); state.storiesRead++; saveState(); }
+  }, 18);
+}
+
+function readAloud() {
+  const text = document.getElementById('storyText').textContent;
+  if (!text) { showToast('📖 Generate a story first!'); return; }
+  if (!('speechSynthesis' in window)) { showToast('🔇 Text-to-speech not supported'); return; }
+  if (speaking) { window.speechSynthesis.cancel(); speaking = false; showToast('⏹️ Stopped'); return; }
+  const utt = new SpeechSynthesisUtterance(text.replace(/[🗺️🔮🚀🌊🌿✨🌟🪐🐸💙]/g, ''));
+  utt.rate = 0.88; utt.pitch = 1.1;
+  utt.onend = () => { speaking = false; };
+  window.speechSynthesis.speak(utt);
+  speaking = true;
+  showToast('🔊 Reading aloud! Tap again to stop.');
+}
+
+// ── Quiz ──
+const sampleQuizzes = [
+  { q:'Which animal is the apex predator of the rainforest?', answers:['Toucan','Jaguar','Tree Frog','Anaconda'], correct:1, emoji:'🐆' },
+  { q:"What do toucans use their large beaks for?", answers:['Singing','Fighting','Reaching fruit & cooling down','Building nests'], correct:2, emoji:'🦜' },
+  { q:'What do tree frogs have on their feet to help them climb?', answers:['Claws','Sticky pads','Suction cups','Hooks'], correct:1, emoji:'🐸' },
+  { q:'Which rainforest layer gets the most sunlight?', answers:['Forest floor','Understory','Canopy','Emergent layer'], correct:3, emoji:'🌞' },
+  { q:'Jaguars are excellent swimmers — true or false?', answers:['True! They love water','False, they hate water','Only cubs swim','Only in dry season'], correct:0, emoji:'💦' },
+];
+
+async function generateQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '<div style="text-align:center;padding:32px;font-size:2rem">🎲 Creating quiz…</div>';
+  await sleep(1000);
+  state.quizQuestions = sampleQuizzes;
+  state.currentQ = 0; state.score = 0;
+  updateScore(); renderQuestion();
+}
+function renderQuestion() {
+  const container = document.getElementById('quizContainer');
+  if (state.currentQ >= state.quizQuestions.length) {
+    const pct = Math.round(state.score / state.quizQuestions.length * 100);
+    state.quizAnswers += state.quizQuestions.length; saveState();
+    container.innerHTML = `
+      <div class="quiz-card" style="text-align:center">
+        <div style="font-size:3.5rem;margin-bottom:10px">${pct>=80?'🏆':pct>=60?'🎉':'💪'}</div>
+        <div style="font-family:'Fredoka One',cursive;font-size:1.7rem;color:var(--dark);margin-bottom:6px">${pct>=80?'Amazing!':pct>=60?'Great work!':'Keep going!'}</div>
+        <div style="color:#666;font-size:0.95rem;margin-bottom:16px">You scored <strong>${state.score} out of ${state.quizQuestions.length}</strong> (${pct}%)</div>
+        <button class="big-btn btn-green" onclick="restartQuiz()">🔄 Try Again</button>
+      </div>`;
+    return;
+  }
+  const q = state.quizQuestions[state.currentQ];
+  container.innerHTML = `
+    <div class="quiz-card">
+      <div class="question-text">${q.emoji} Q${state.currentQ+1}: ${q.q}</div>
+      <div class="answers">${q.answers.map((a,i)=>`<button class="ans-btn" onclick="answerQ(${i})">${['A','B','C','D'][i]}. ${a}</button>`).join('')}</div>
+    </div>`;
+}
+function answerQ(idx) {
+  const q = state.quizQuestions[state.currentQ];
+  document.querySelectorAll('.ans-btn').forEach((b,i) => {
+    b.disabled = true;
+    if (i===q.correct) b.classList.add('correct');
+    else if (i===idx) b.classList.add('wrong');
+  });
+  if (idx===q.correct) { state.score++; showToast('✅ Correct! 🎉'); }
+  else showToast('❌ Answer: ' + q.answers[q.correct]);
+  updateScore();
+  setTimeout(() => { state.currentQ++; renderQuestion(); }, 1500);
+}
+function updateScore() {
+  document.getElementById('scoreDisplay').textContent = `⭐ ${state.score} / ${state.quizQuestions.length||0}`;
+  document.getElementById('quizProgressFill').style.width = ((state.currentQ/(state.quizQuestions.length||1))*100)+'%';
+}
+function restartQuiz() { state.currentQ=0; state.score=0; updateScore(); renderQuestion(); }
+
+// ── Flashcards ──
+let cardFlipped = false;
+function flipCard() {
+  cardFlipped = !cardFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', cardFlipped);
+  if (cardFlipped) { state.cardsStudied++; saveState(); }
+}
+function nextCard() { state.currentCard=(state.currentCard+1)%state.flashcards.length; loadCard(); }
+function prevCard() { state.currentCard=(state.currentCard-1+state.flashcards.length)%state.flashcards.length; loadCard(); }
+function loadCard() {
+  cardFlipped = false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  const fc = state.flashcards[state.currentCard];
+  document.getElementById('fcFront').textContent = fc.q;
+  document.getElementById('fcBack').textContent = fc.a;
+  document.getElementById('fcHint').textContent = fc.hint||'';
+  document.getElementById('fcCounter').textContent = `${state.currentCard+1} / ${state.flashcards.length}`;
+}
+async function generateFlashcards() {
+  const topic = document.getElementById('flashTopic').value.trim();
+  if (!topic) { showToast('💡 Type a topic first!'); return; }
+  showToast('🃏 Generating…');
+  await sleep(900);
+  const newCards = [
+    { q:`What is the main characteristic of ${topic}?`, a:`Key features of ${topic}! 🌟`, hint:'Think about what makes it unique.' },
+    { q:`Give an example of ${topic} in real life.`, a:`${topic} is all around us! 🌍`, hint:'Look around you!' },
+    { q:`Why is it important to learn about ${topic}?`, a:`${topic} connects to so much! 📚`, hint:'How does it affect the world?' },
+  ];
+  state.flashcards = [...state.flashcards, ...newCards];
+  state.currentCard = state.flashcards.length - newCards.length;
+  loadCard();
+  showToast(`✅ ${newCards.length} new cards added!`);
+}
+
+// ── Progress ──
+function renderProgress() {
+  document.getElementById('statStories').textContent = state.storiesRead;
+  document.getElementById('statQuizzes').textContent = state.quizAnswers;
+  document.getElementById('statCards').textContent = state.cardsStudied;
+  document.getElementById('statStreak').textContent = state.streak;
+  document.getElementById('subjectBars').innerHTML = state.subjects.map(s=>`
+    <div>
+      <div class="subj-header"><span>${s.name}</span><span>${s.pct}%</span></div>
+      <div class="subj-track"><div class="subj-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+    </div>`).join('');
+  document.getElementById('badgeShelf').innerHTML = state.badges.map(b=>`
+    <div class="badge ${b.locked?'locked':''}">
+      <span class="b-icon">${b.icon}</span>
+      <span class="b-name">${b.name}</span>
+    </div>`).join('');
+}
+
+// ── Utils ──
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// Init
+loadCard();
+</script>
+</body>
+</html>
